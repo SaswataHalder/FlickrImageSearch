@@ -5,5 +5,5 @@ import com.flickr.imagesearchapp.data.FlickrPhotos
 
 data class FlickrResponse(
     val stat: String? =null,
-    val photos: FlickrPhotos?=null,
+    val photos: FlickrPhotos,
 )

@@ -1,6 +1,7 @@
 package com.flickr.imagesearchapp.api
 
 import com.flickr.imagesearchapp.BuildConfig
+import com.flickr.imagesearchapp.data.FlickrPhotos
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -18,11 +19,13 @@ interface FlickrApi {
         @Query("page") page: Int,
         @Query("per_page") perpage: Int=20,
         @Query("api_key") api_key: String= CLIENT_ID,
-    ): Call<FlickrResponse>
+    ): FlickrResponse
 
     @GET("services/rest/?method=flickr.photos.search&format=json&nojsoncallback=1&extras=url_s")
     fun getSearchResult(
         @Query("text") query: String,
+        @Query("page") page: Int,
+        @Query("per_page") perpage: Int=20,
         @Query("api_key") key: String= CLIENT_ID,
-    ): Call<FlickrResponse>
+    ): FlickrResponse
 }

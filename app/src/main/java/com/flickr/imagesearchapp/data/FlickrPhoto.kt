@@ -22,5 +22,5 @@ class FlickrPhoto(
 data class FlickrPhotos (
     val page: Int = 0,
     val perpage: Int = 0,
-    val photo: List<FlickrPhoto>? = null,
+    val photo: List<FlickrPhoto>,
 )

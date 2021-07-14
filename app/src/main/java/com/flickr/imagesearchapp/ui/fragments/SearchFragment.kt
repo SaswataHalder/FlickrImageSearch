@@ -6,9 +6,11 @@ import android.util.Log
 import android.view.*
 import android.widget.LinearLayout
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.flickr.imagesearchapp.R
 import com.flickr.imagesearchapp.api.FlickrResponse
@@ -52,7 +54,6 @@ class SearchFragment : Fragment(R.layout.fragment_gallery) {
         super.onViewCreated(view, savedInstanceState)
 
         viewModel = ViewModelProvider(this).get(SearchViewModel::class.java)
-        flickrResponse = viewModel.getFlickrResponse()
         queryText = viewModel.queryText
         error = viewModel.error
 
@@ -62,6 +63,27 @@ class SearchFragment : Fragment(R.layout.fragment_gallery) {
             layoutManager = StaggeredGridLayoutManager(NUM_COLUMNS, LinearLayout.VERTICAL)
             adapter = searchRecyclerViewAdapter
         }
+
+        searchRecyclerViewAdapter.addLoadStateListener { loadState ->
+
+            progress_bar.isVisible = loadState.source.refresh is LoadState.Loading
+            recycler_view.isVisible = loadState.source.refresh is LoadState.NotLoading
+            button_retry.isVisible = loadState.source.refresh is LoadState.Error
+            text_view_error.isVisible = loadState.source.refresh is LoadState.Error
+
+            // empty view
+            if (loadState.source.refresh is LoadState.NotLoading &&
+                loadState.append.endOfPaginationReached &&
+                searchRecyclerViewAdapter.itemCount < 1
+            ) {
+                recycler_view.isVisible = false
+                text_view_empty.isVisible = true
+            } else {
+                text_view_empty.isVisible = false
+            }
+
+        }
+        setHasOptionsMenu(true)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -128,14 +150,9 @@ class SearchFragment : Fragment(R.layout.fragment_gallery) {
     }
 
     private fun observeViewModel() {
-        flickrResponse.observe(viewLifecycleOwner, androidx.lifecycle.Observer { flickrResponse ->
+        viewModel._searchimages.observe(viewLifecycleOwner, androidx.lifecycle.Observer { flickrResponse ->
             flickrResponse?.let {
-                val flickrPhotos: FlickrPhotos = it.photos!!
-                val listFlickrPhotos: List<FlickrPhoto> = flickrPhotos.photo!!
-                searchRecyclerViewAdapter.updatePhoto(listFlickrPhotos)
-                for (i in listFlickrPhotos) {
-                    Log.i(TAG, "${i.url}")
-                }
+                searchRecyclerViewAdapter.submitData(viewLifecycleOwner.lifecycle,it)
             }
         })
 
